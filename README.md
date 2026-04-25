@@ -32,7 +32,7 @@ This project serves as my Final Engineering Project, demonstrating my ability to
 
 This project is deployed using GitHub Pages.
 
-[https://thetanos24.github.io/se_final_project/](https://thetanos24.github.io/se_final_project/)
+[https://thetanos24.github.io/riseandhydrate_finalproject/)
 
 ## How to Run Locally
 
