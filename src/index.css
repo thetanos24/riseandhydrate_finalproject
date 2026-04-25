@@ -1,5 +1,5 @@
 @import url(./vendor/normalize.css);
-@import url(./vendor/fonts.css);
+@import url(./vendor/font.css);
 
 :root {
   font-family: "Caprasimo-Regular", Inter, system-ui, sans-serif;

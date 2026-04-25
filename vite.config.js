@@ -5,6 +5,6 @@ export default defineConfig({
   base: "/riseandhydrate_finalproject/",
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 5174,
   },
 });
