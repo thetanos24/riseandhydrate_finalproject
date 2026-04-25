@@ -46,4 +46,4 @@ This project is deployed using GitHub Pages.
 
 ## Links
 
-- [GitHub Repository](https://github.com/thetanos24/se_final_project)
+- [GitHub Repository](https://github.com/thetanos24/riseandhydrate_finalproject)
