@@ -1,178 +1,127 @@
-import { useState, useContext, useEffect } from "react";
-import "./RecipeForm.css";
-import RecipeCards from "../RecipeCards/RecipeCards";
-import RecipeModal from "../RecipeModal/RecipeModal";
+import { useContext, useEffect } from "react";
 import CurrentTemperatureUnitContext from "../../contexts/CurrentTemperatureUnitContext";
-import { RECIPE_VARIATIONS } from "../../utils/constants";
-import { useBakeCalculator } from "../../hooks/useBakeCalculator";
+import "./RecipeModal.css";
 
-function RecipeForm({ temperature, humidity }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [showRecipe, setShowRecipe] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
-
+function RecipeModal({ recipe, onClose, water, temp }) {
   const { currentTemperatureUnit } = useContext(CurrentTemperatureUnitContext);
 
-  const [localTemp, setLocalTemp] = useState(temperature || "");
-  const [localHumidity, setLocalHumidity] = useState(humidity || "");
-
-  const { adjustedWater } = useBakeCalculator(localHumidity, 70);
-
   useEffect(() => {
-    if (temperature) setLocalTemp(temperature);
-    if (humidity) setLocalHumidity(humidity);
-  }, [temperature, humidity]);
+    const handleEscClose = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
 
-  const handleGenerate = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setShowRecipe(true);
-    }, 3000);
+    document.addEventListener("keydown", handleEscClose);
+    return () => {
+      document.removeEventListener("keydown", handleEscClose);
+    };
+  }, [onClose]);
+
+  if (!recipe) return null;
+
+  const getTempStatus = () => {
+    const t = Number(temp);
+    const isF = currentTemperatureUnit === "F";
+
+    if (isF) {
+      if (t < 68)
+        return {
+          label: "Cold",
+          tip: "Cooler temps slow things down; stay patient and expect a longer rise.",
+        };
+      if (t <= 75)
+        return {
+          label: "Ideal",
+          tip: "Your kitchen is in the sourdough 'sweet spot'! Fermentation should be steady.",
+        };
+      return {
+        label: "Hot",
+        tip: "High heat speeds up fermentation; check your dough early to avoid over-proofing.",
+      };
+    } else {
+      if (t < 20)
+        return {
+          label: "Cold",
+          tip: "Cooler temps slow things down; stay patient and expect a longer rise.",
+        };
+      if (t <= 24)
+        return {
+          label: "Ideal",
+          tip: "Your kitchen is in the sourdough 'sweet spot'! Fermentation should be steady.",
+        };
+      return {
+        label: "Hot",
+        tip: "High heat speeds up fermentation; check your dough early to avoid over-proofing.",
+      };
+    }
   };
 
+  const status = getTempStatus();
+
   return (
-    <div className="recipe-page">
-      <div className="recipe-form__container">
-        {isLoading ? (
-          <div className="loader-container">
-            <div className="dough-ball"></div>
-            <p className="loader-text">Analyzing local conditions...</p>
-          </div>
-        ) : showRecipe ? (
-          <div className="recipe-results">
-            <h2 className="recipe-form__title">your baking plan</h2>
+    <div className="modal" onClick={onClose}>
+      <div className="modal__container" onClick={(e) => e.stopPropagation()}>
+        <button className="modal__close" onClick={onClose} type="button">
+          &times;
+        </button>
 
-            <div className="recipe-results__card">
-              <ul className="recipe-results__list">
-                <li>
-                  <strong>Bread Flour:</strong> 500g
-                </li>
-                <li>
-                  <strong>Water:</strong> {adjustedWater}g
-                  <span className="recipe-results__note">
-                    (70% hydration +{" "}
-                    {Number(localHumidity) < 25
-                      ? "arid adjustment"
-                      : "standard"}
-                    )
-                  </span>
-                </li>
-                <li>
-                  <strong>Sourdough Starter:</strong> 100g
-                </li>
-                <li>
-                  <strong>Salt:</strong> 10g
-                </li>
-              </ul>
-            </div>
+        <img src={recipe.image} alt={recipe.name} className="modal__image" />
 
-            <h3 className="recipe-list__title">choose your style</h3>
-            <div className="recipe-grid">
-              {RECIPE_VARIATIONS.map((recipe) => (
-                <RecipeCards
-                  key={recipe.id}
-                  recipe={recipe}
-                  onSelect={setSelectedRecipe}
-                />
+        <div className="modal__content">
+          <h2 className="modal__title">{recipe.name}</h2>
+          <p className="modal__description">{recipe.description}</p>
+
+          <div className="modal__section">
+            <h3 className="modal__subtitle">Ingredients:</h3>
+            <ul className="modal__list">
+              <li className="modal__list-item modal__list-item--highlight">
+                <strong>Water:</strong> {water}g (Adjusted for your environment)
+              </li>
+              {recipe.ingredients?.map((item, index) => (
+                <li key={index} className="modal__list-item">
+                  {item}
+                </li>
               ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowRecipe(false)}
-              className="about__button"
-              style={{ marginTop: "40px" }}
-            >
-              RESET BAKE
-            </button>
+            </ul>
           </div>
-        ) : (
-          <form className="recipe-form" onSubmit={handleGenerate}>
-            <h2 className="recipe-form__title">ready to bake?</h2>
-            <p className="recipe-form__subtitle">
-              We've detected your environment, but feel free to adjust these
-              manually.
-            </p>
 
-            <div className="recipe-stats-display">
-              <div className="recipe-stat">
-                <label className="recipe-stat__label" htmlFor="temp-select">
-                  KITCHEN TEMP
-                </label>
-                <select
-                  id="temp-select"
-                  className="recipe-stat__input"
-                  value={localTemp}
-                  onChange={(e) => setLocalTemp(e.target.value)}
+          <div className="modal__section">
+            <h3 className="modal__subtitle">Preparation:</h3>
+            <ol className="modal__instruction-list">
+              {recipe.instructions?.map((step, index) => (
+                <li key={index} className="modal__instruction-step">
+                  {step
+                    .replace("{water}", water)
+                    .replace("{temp}", `${temp}°${currentTemperatureUnit}`)}
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="modal__section">
+            <h3 className="modal__subtitle">Arid Baker Method:</h3>
+            <ul className="modal__list">
+              <li>
+                <strong>Temperature Alert ({status.label}):</strong> Your
+                kitchen is {temp}°{currentTemperatureUnit}.
+                <p
+                  className="modal__tip-text"
+                  style={{ marginTop: "8px", fontStyle: "italic" }}
                 >
-                  <option value="">Select Range</option>
-                  {temperature && (
-                    <option value={temperature}>
-                      {temperature}°{currentTemperatureUnit} (Current Local)
-                    </option>
-                  )}
-                  <option value={currentTemperatureUnit === "F" ? "65" : "18"}>
-                    Cold (Below{" "}
-                    {currentTemperatureUnit === "F" ? "68°F" : "20°C"})
-                  </option>
-                  <option value={currentTemperatureUnit === "F" ? "72" : "22"}>
-                    Ideal (
-                    {currentTemperatureUnit === "F"
-                      ? "68°F - 75°F"
-                      : "20°C - 24°C"}
-                    )
-                  </option>
-                  <option value={currentTemperatureUnit === "F" ? "80" : "27"}>
-                    Warm (Above{" "}
-                    {currentTemperatureUnit === "F" ? "75°F" : "24°C"})
-                  </option>
-                </select>
-              </div>
-
-              <div className="recipe-stat">
-                <label className="recipe-stat__label" htmlFor="humidity-select">
-                  KITCHEN FEELS
-                </label>
-                <select
-                  id="humidity-select"
-                  className="recipe-stat__input"
-                  value={localHumidity}
-                  onChange={(e) => setLocalHumidity(e.target.value)}
-                >
-                  <option value="">Select RH Range</option>
-                  {humidity && (
-                    <option value={humidity}>
-                      {humidity}% (Current Local)
-                    </option>
-                  )}
-                  <option value="15">Dry (Below 30%)</option>
-                  <option value="40">Perfect (30% - 60%)</option>
-                  <option value="70">Humid (Above 60%)</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="recipe__button"
-              disabled={!localTemp || !localHumidity}
-            >
-              SHOW ME MY PLAN!
-            </button>
-          </form>
-        )}
+                  {status.tip}
+                </p>
+              </li>
+              <li>
+                <strong>Protection:</strong> If humidity is dry/low, use a damp
+                cloth cover to prevent a dry "skin" from forming on the dough.
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
-
-      <RecipeModal
-        recipe={selectedRecipe}
-        onClose={() => setSelectedRecipe(null)}
-        water={adjustedWater}
-        temp={localTemp}
-      />
     </div>
   );
 }
 
-export default RecipeForm;
+export default RecipeModal;
