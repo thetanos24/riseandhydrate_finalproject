@@ -1,22 +1,12 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import CurrentTemperatureUnitContext from "../../contexts/CurrentTemperatureUnitContext";
+import useModalClose from "../../hooks/useModalClose";
 import "./RecipeModal.css";
 
 function RecipeModal({ recipe, onClose, water, temp }) {
   const { currentTemperatureUnit } = useContext(CurrentTemperatureUnitContext);
 
-  useEffect(() => {
-    const handleEscClose = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscClose);
-    return () => {
-      document.removeEventListener("keydown", handleEscClose);
-    };
-  }, [onClose]);
+  useModalClose(!!recipe, onClose);
 
   if (!recipe) return null;
 
@@ -60,8 +50,8 @@ function RecipeModal({ recipe, onClose, water, temp }) {
   const status = getTempStatus();
 
   return (
-    <div className="modal" onClick={onClose}>
-      <div className="modal__container" onClick={(e) => e.stopPropagation()}>
+    <div className="modal">
+      <div className="modal__container">
         <button className="modal__close" onClick={onClose} type="button">
           &times;
         </button>
